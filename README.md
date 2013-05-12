@@ -14,5 +14,4 @@ Parts of the simulation:
 
 Requirements:
   * Go programming language installed (with command-line tools, of course)
-  * [OpenGL for Go](https://github.com/go-gl):
-    ** gltext, gl, glfw, glu (possibly others)
+  * [OpenGL for Go](https://github.com/go-gl): gltext, gl, glfw, glu (possibly others)
