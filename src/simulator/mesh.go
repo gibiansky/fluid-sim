@@ -30,6 +30,17 @@ type Mesh struct {
 
 /*** Exposed methods ***/
 
+// Create a mesh, initialized to nice (non-zero where relevant) default values
+func CreateMesh(name string, vertices []vector.Vector, faces [][]int64) *Mesh {
+	mesh := new(Mesh)
+	mesh.Name = name
+	mesh.Vertices = vertices
+	mesh.Faces = faces
+	mesh.FaceNormals, mesh.VertexNormals = ComputeNormals(mesh)
+	mesh.sx, mesh.sy, mesh.sz = 1, 1, 1
+	return mesh
+}
+
 // Return a copy of a mesh. The copy shares the vertex and face array.
 func (original *Mesh) Copy() *Mesh {
 	mesh := new(Mesh)
@@ -190,7 +201,7 @@ func LoadObjFile(filename string) map[string]*Mesh {
 		mesh.Name = meshName
 		mesh.Vertices = vertices
 		mesh.Faces = faces
-		mesh.FaceNormals, mesh.VertexNormals = computeNormals(mesh)
+		mesh.FaceNormals, mesh.VertexNormals = ComputeNormals(mesh)
 		meshes[meshName] = mesh
 		mesh.sx = 1
 		mesh.sy = 1
@@ -256,7 +267,7 @@ func LoadObjFile(filename string) map[string]*Mesh {
 /*** Internal functions ***/
 
 // Compute face and vertex normal vectors for a mesh.
-func computeNormals(mesh *Mesh) ([]vector.Vector, []vector.Vector) {
+func ComputeNormals(mesh *Mesh) ([]vector.Vector, []vector.Vector) {
 	// Allocate space for face and vertex normals.
 	faceNormals := make([]vector.Vector, len(mesh.Faces))
 	vertexNormals := make([]vector.Vector, len(mesh.Vertices))

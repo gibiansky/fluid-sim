@@ -39,21 +39,23 @@ const (
 )
 
 var (
-	particles     = NewSliceParticleList()
 	frame         = 0
 	collisionMesh = createCollisionMesh()
 	cpus          = runtime.NumCPU()
 	rho           = 0.0 // Recalculated as needed
 )
 
+var particles ParticleList
+
 func main() {
-	// Enable profiling
-	f, err := os.Create("profile.data")
-	if err != nil {
-		log.Fatal(err)
-	}
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
+//	// Enable profiling
+//	f, err := os.Create("profile.data")
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	pprof.StartCPUProfile(f)
+//	defer pprof.StopCPUProfile()
+	particles     = NewSliceParticleList()
 
 	// Use multiple cores.
 	fmt.Printf("Using %d CPUs.\n", cpus)
@@ -79,6 +81,9 @@ func main() {
 
 		// Update our own portion of the simulation
 		updateSimulation()
+
+		surfaceMesh := constructSurface(particles, cpus)
+		simulator.AddMesh(surfaceMesh)
 
 		simulator.Draw()
 	}
@@ -208,6 +213,11 @@ func updateParticlePositions(particle *Particle, cpu int) {
 
 	// Move mesh to particle location
 	particle.mesh.MoveTo(particle.position)
+
+	// If this particle is too damn far away, get rid of the bastard
+	if particle.position.Z < 0 {
+		particles.Remove(particle)
+	}
 }
 
 // Update particle velocity due to collisions with the collision mesh.

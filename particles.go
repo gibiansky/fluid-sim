@@ -15,8 +15,9 @@ type Particle struct {
 
 type ParticleList interface{
 	Add(*Particle)
-	FindNeighbors(*Particle, float64) []*Particle
-	ForEach(func (*Particle))
+	Remove(*Particle)
+	FindNeighbors(*Particle, float64, int) ([]*Particle, []float64)
+	ForEach(func (*Particle, int), int)
 }
 
 type SliceParticleList struct {
@@ -26,7 +27,6 @@ type SliceParticleList struct {
 }
 
 func (this *SliceParticleList) Add(particle *Particle) {
-
 	l := len(this.particles)
 	if l + 1 > cap(this.particles) {  // reallocate
 		// Allocate double what's needed, for future growth.
@@ -36,6 +36,18 @@ func (this *SliceParticleList) Add(particle *Particle) {
 	}
 	this.particles = this.particles[0:l+1]
 	this.particles[l] = particle
+}
+
+func (this *SliceParticleList) Remove(particle *Particle) {
+	index := -1
+	for i, p := range this.particles {
+		if particle == p {
+			index = i
+			break
+		}
+	}
+	this.particles[index] = this.particles[len(this.particles) - 1]
+	this.particles = this.particles[0:len(this.particles) - 1]
 }
 
 func NewSliceParticleList() *SliceParticleList {
