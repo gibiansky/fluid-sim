@@ -1,0 +1,35 @@
+1. Visibility Splatting: the zero level is rendered to the depth buffer. It is then incremented by some amount epsilon.
+    - The zero level is simply a rasterization of the particles as spheres.
+    - Rasterization is done via an approximation (for speed):
+        - Let spheres be at points x_i with radii h_i
+        - Approximate size on image to have radius h_i' by scaling h_i via perspective
+        - Then, render each particle as a square of size length 2h_i':
+            * For each pixel (fragment) in the square:
+                - Check whether it's inside or outside projection of sphere at x_i
+                - If projected pixel position x' is outside circle w/ radius h_i' around x_i', discard it
+                - Given pixel location x' (inside projected square), world location x, depth value is
+                    z_i(x') = z_i - sqrt(h_i^2 - ||x - x_i||^2)
+                  where z_i is depth of sphere center x_i
+
+    Second Summary:
+        - Compute projected sphere size via a vertex shader (send all vertices as GL_POINTs)
+            * possibly also compute projected sphere center
+            * possibly compute depth of sphere center?
+        - draw spheres as 2h_i' side length square
+            - via fragment shader, discard pixels that are outside circle around center w/ radius h_i'
+        - Compute z_i, depth of each sphere center, by rendering all particles as points and getting the depth buffer
+        - via fragment shader compute new depth values via
+                z_i(x') = z_i - sqrt(h_i^2 - ||x - x_i||^2) + epsilon
+        - Compute normals in the same way?
+
+2. Attribute Blending for Pixels (color, normal, weight)
+    - additive blending
+    - use 2 weight functions:
+        W_i^1(x') = 0 if || x' - x_i' || <= h_i' (i.e. if its outside one h_i' radius)
+                  = 1 - ||x' - x_i'||/h_i' (if its within radius)
+        W_i^2(x') = 1/epsilon (epsilon shifted depth - real depth)
+    - Blending an arbitrary function f: f(x') = Sum over pixels of W_i^1(x')W_i^2(x') f(x')
+    - At the end: per-pixel shading
+        - f(x) = f(x')/ W(x) -- total weight normalization
+        - n(x) = n(x) / || n(x) || -- normalization of normal vector
+

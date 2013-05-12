@@ -1,0 +1,21 @@
+#!/bin/bash
+echo 'Compiling...'
+export GOPATH=$(pwd)
+
+go install vector
+if [ ! $? -eq 0 ]; then
+    echo 'Error while compiling.' & exit
+fi
+
+go install simulator
+if [ ! $? -eq 0 ]; then
+    echo 'Error while compiling.' & exit
+fi
+
+go build -o sph *.go
+if [ ! $? -eq 0 ]; then
+    echo 'Error while compiling.' & exit
+fi
+
+echo 'Compiled.'
+./sph
