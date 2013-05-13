@@ -13,8 +13,8 @@ var _ = fmt.Printf
 var _ = os.Exit
 
 const (
-	cubeWidth    = 0.7 * cm
-	isoThreshold = 550.0
+	cubeWidth    = 0.4 * cm
+	isoThreshold = 500.0
 )
 
 var (
@@ -25,6 +25,7 @@ var (
 	kernelRadiusVec = vector.Vector{kernelRadius, kernelRadius, kernelRadius}
 )
 
+// Construct the surface mesh for a set of particles
 func constructSurface(particles ParticleList, cpus int) *simulator.Mesh {
 	// Get the true bounding box
 	minVector, maxVector = findBoundingBox(particles, cpus)
@@ -42,8 +43,17 @@ func constructSurface(particles ParticleList, cpus int) *simulator.Mesh {
 	// Create the actual mesh
 	vertices, faces := makeSurfaceMesh()
 
+    // Optimize the mesh
+    vertices, faces = optimizeMesh(vertices, faces)
+
 	// Make the mesh object and return it
 	return simulator.CreateMesh("Surface", vertices, faces)
+}
+
+// Optimize a mesh by removing vertices and joining faces
+func optimizeMesh(vertices []vector.Vector, faces [][]int64) ([]vector.Vector, [][]int64) {
+    fmt.Printf("Vertices: %v\nFaces: %v\n\n", len(vertices), len(faces))
+    return vertices, faces
 }
 
 // Create the mesh using marching cubes. The values at each point must already
@@ -55,9 +65,39 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 
 	// Convenience function to add a face made of three vertices
 	addFace := func(v1, v2, v3 vector.Vector) {
-		// Create the face
+        newVerts := 3
 		numVerts := int64(len(vertices))
-		face := []int64{numVerts, numVerts + 1, numVerts + 2}
+        n1, n2, n3 := int64(-1), int64(-1), int64(-1)
+
+        distThresh := 0.01 * cm
+        for i := len(vertices) - 1; i >= 0 && i >= int(0.8 * float32(len(vertices))); i-- {
+            if v1.DistanceTo(vertices[i]) < distThresh && n1 < 0 {
+                n1 = int64(i)
+                newVerts --
+            } else if v2.DistanceTo(vertices[i]) < distThresh && n2 < 0 {
+                n2 = int64(i)
+                newVerts --
+            } else if v3.DistanceTo(vertices[i]) < distThresh && n3 < 0 {
+                n3 = int64(i)
+                newVerts --
+            }
+        }
+
+        used := int64(0)
+        if n1 < 0 {
+            n1 = numVerts + used
+            used ++
+        }
+        if n2 < 0 {
+            n2 = numVerts + used
+            used ++
+        }
+        if n3 < 0 {
+            n3 = numVerts + used
+        }
+
+		// Create the face
+		face := []int64{n1, n2, n3}
 
 		// If there's not enough room for one more face, allocate more space
 		l := len(faces)
@@ -74,18 +114,18 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 
 		// If there's not enough room for three more vertices, allocate more space
 		l = len(vertices)
-		if l+3 > cap(vertices) {
+		if l+newVerts > cap(vertices) {
 			// Allocate double what's needed, for future growth.
-			newSlice := make([]vector.Vector, (l+3)*2)
+			newSlice := make([]vector.Vector, (l+newVerts)*2)
 			copy(newSlice, vertices)
 			vertices = newSlice
 		}
 
 		// Store new vertices
-		vertices = vertices[0 : l+3]
-		vertices[l] = v1
-		vertices[l+1] = v2
-		vertices[l+2] = v3
+		vertices = vertices[0 : l+newVerts]
+		vertices[n1] = v1
+		vertices[n2] = v2
+		vertices[n3] = v3
 	}
 
 	// Do the marching cubes craziness

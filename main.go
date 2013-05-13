@@ -40,6 +40,7 @@ const (
 
 var (
 	profile       = flag.Bool("profile", false, "Enable profiling")
+	drawSurface       = flag.Bool("surface", true, "Enable drawing the isosurface")
 	multithreaded = flag.Bool("multithreaded", true, "Enable multithreaded operation")
 
 	frame         = 0
@@ -99,8 +100,10 @@ func main() {
 			// Update our own portion of the simulation
 			updateSimulation()
 
-			surfaceMesh := constructSurface(particles, cpus)
-			simulator.AddMesh(surfaceMesh)
+            if *drawSurface {
+                surfaceMesh := constructSurface(particles, cpus)
+                simulator.AddMesh(surfaceMesh)
+            }
 		}
 
 		simulator.Draw()
@@ -151,8 +154,8 @@ func initSimulation() {
 
 // Create the mesh with which particles register collisions.
 func createCollisionMesh() *simulator.Mesh {
-	//mesh := simulator.LoadObjFile("data/openCube.obj")["OpenCube"]
-	mesh := simulator.LoadObjFile("data/bowl.obj")["Bowl"]
+	mesh := simulator.LoadObjFile("data/openCube.obj")["OpenCube"]
+	//mesh := simulator.LoadObjFile("data/bowl.obj")["Bowl"]
 	mesh.Scale(0.8)
 	mesh.Translate(0, 0, float32(12*cm))
 	mesh.ApplyTransformsToVertices()

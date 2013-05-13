@@ -4,6 +4,7 @@ import (
 	"math"
 	"simulator"
 	"vector"
+    "sync"
 )
 
 type Particle struct {
@@ -92,9 +93,12 @@ func (this *SliceParticleList) ForEach(todo func(*Particle, int), processors int
 		}
 	}
 
+    // Create a wait group to wait for this to finish
+    var waitGroup sync.WaitGroup
+    waitGroup.Add(processors)
+
 	// Start a new goroutine for each processor
 	particlesPerProcessor := len(this.particles) / processors
-	done := make(chan bool)
 	for proc := 0; proc < processors; proc++ {
 		start := proc * particlesPerProcessor
 		end := (proc + 1) * particlesPerProcessor
@@ -107,11 +111,9 @@ func (this *SliceParticleList) ForEach(todo func(*Particle, int), processors int
 				todo(particle, proc)
 			}
 
-			done <- true
+            waitGroup.Done()
 		}(proc)
 	}
 
-	for i := 0; i < processors; i++ {
-		<-done
-	}
+    waitGroup.Wait()
 }

@@ -36,7 +36,7 @@ func CreateMesh(name string, vertices []vector.Vector, faces [][]int64) *Mesh {
 	mesh.Name = name
 	mesh.Vertices = vertices
 	mesh.Faces = faces
-	mesh.FaceNormals, mesh.VertexNormals = ComputeNormals(mesh)
+    mesh.FaceNormals, mesh.VertexNormals = ComputeNormals(mesh)
 	mesh.sx, mesh.sy, mesh.sz = 1, 1, 1
 	return mesh
 }
