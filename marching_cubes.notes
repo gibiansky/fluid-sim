@@ -1,0 +1,74 @@
+1) Find bounding box:
+    - ForEach(particle)
+        For Each Coordinate:
+            - store array of mins and maxes which have 1 slot per processor used
+            - find min and max for each processor
+            - find min and max of thos
+
+2) Split bounding box
+    - Divide bounding box into sub-boxes, i.e. choose a spacing
+    - Allocate array for values, one value per intersection point, with easy indexing
+
+3) Compute field values at each point
+    - ForEach(particle)
+        - compute which intersection points are within radius h (should be simple arithmetic, modulus, etc)
+        - add particle contribution of field to that intersection point in the arrays
+            - Don't forget to lock on the array slots or something like that, to make sure we're not having sync problems
+
+4) Marching cubes
+    - this is going to be hard: http://www.exaflop.org/docs/marchcubes/
+    - but essentially just copying a known algorithm: http://paulbourke.net/geometry/polygonise/
+    - ideas:
+        - store normals for each point in the intersection things
+        - compute these normals by adding a bit for each particle that contributes to the field
+        - the normal from a particle is radially outwards
+        - then somehow interpolate these onto the vertices of the marching cubes results?
+
+Marching Cubes:
+    ForEach cube:
+        1. compute cube index:
+            # cubeindex is an 8-bit number
+            cubeindex = 0;
+            if (grid.val[0] < isolevel) cubeindex |= 1;
+            if (grid.val[1] < isolevel) cubeindex |= 2;
+            if (grid.val[2] < isolevel) cubeindex |= 4;
+            if (grid.val[3] < isolevel) cubeindex |= 8;
+            if (grid.val[4] < isolevel) cubeindex |= 16;
+            if (grid.val[5] < isolevel) cubeindex |= 32;
+            if (grid.val[6] < isolevel) cubeindex |= 64;
+            if (grid.val[7] < isolevel) cubeindex |= 128;
+
+        2. Create edgeTable, which is a map cubeindex --> 12 bit number. 
+           each bit of the table dictates whether that edge is intersected.
+           (edges are numbered 0 through 11)
+
+        3. Look up edge table value given cube index
+
+        4. Calculate intersection points for each edge:
+            point = first vertex + (isovalue - first vertex value) * (second vertex - first vertex) / (second vertex value - first vertex value)
+
+        5. Given positions of intersections on the edges, form the actual surfaces.
+           Use triangleTable which maps cubeindex --> [15]int where each triple is the indices of the edges that have intersections
+           i.e. each triple defines a triangle, so if its {3, 11, 2, ...} then one of the triangles is the one formed by the intersections with edges 3, 11, 2
+           the edge interesections are the interpolations we computed in the previous step
+
+Determining Normals:
+    Option 1: 
+        Take mesh that results from Marching Cubes. Compute Vertex Normals as usual, 
+            i.e. averaging the normals of the faces next to that vertex.
+
+    Option 2:
+        Compute "normal" at each vertex of each cube in marching cubes. Do this by using
+        radial vectors from the particles that contribute to the value at that vertex. Weight
+        each radial vector by the amount that is being contributed.
+
+        When computing the interpolation of the intersection position (by weighted-averaging the
+        positions of the cube vertices), also do the same thing for normals. Then, you have a 
+        normal at each intersection point. 
+
+        If you have intersection points that are shared between cubes, average the vertex normals.
+
+Get values for edgeTable and triangleTable here: http://paulbourke.net/geometry/polygonise/
+
+
+
