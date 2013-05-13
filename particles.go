@@ -38,7 +38,12 @@ func (this *SliceParticleList) Add(particle *Particle) {
 	this.particles[l] = particle
 }
 
+// Remove a particle from the simulation
 func (this *SliceParticleList) Remove(particle *Particle) {
+	// Remove the particle's mesh from the collection of drawn objects
+	simulator.DeleteMesh(particle.mesh.Name)
+
+	// Remove the particle from our collection to update
 	index := -1
 	for i, p := range this.particles {
 		if particle == p {

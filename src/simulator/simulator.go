@@ -35,6 +35,11 @@ var (
 	// Pause simulation but not visualization
 	paused = false
 
+	// Restart simulation: this is a little funky; the flag to restart is
+	// here, but the simulation restart has to happen in main, so the
+	// function ShouldRestartSimulation() is a little...awkward.
+	shouldRestartSimulation = false
+
 	// Use help overlay
 	helpOverlay = false
 
@@ -150,6 +155,16 @@ func Running() bool {
 // Returns true if the simulation is paused
 func Paused() bool {
 	return paused
+}
+
+// Determine whether the user has requested a simulation restart.
+func ShouldRestartSimulation() bool {
+	return shouldRestartSimulation
+}
+
+// Function for main to call once the simulation has been restarted
+func SimulationRestarted() {
+	shouldRestartSimulation = false
 }
 
 // Blocks until it is time for the next frame.
@@ -315,6 +330,12 @@ func initInput() {
 		paused = !paused
 	})
 	AddHotkeyHelpText("P", "Toggle simulation pause")
+
+	// Restart simulation from the beginning
+	RegisterKey('.', KeyDown, func() {
+		shouldRestartSimulation = true
+	})
+	AddHotkeyHelpText(".", "Restart simulation")
 
 
 	// Start listening for key presses

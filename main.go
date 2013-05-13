@@ -76,6 +76,11 @@ func main() {
 
 	// Run the simulation main loop
 	for simulator.Running() {
+		// Check if the user wants to restart the simulation
+		if simulator.ShouldRestartSimulation() {
+			clearSimulation()
+			initSimulation()
+		}
 		simulator.WaitForNextFrame()
 		simulator.Update()
 
@@ -89,6 +94,15 @@ func main() {
 
 		simulator.Draw()
 	}
+}
+
+// Remove all particles from the simulation so that it can be restarted.
+func clearSimulation() {
+	// Only run this with one processor, or you'll get *all* the index out
+	// of bounds errors.
+	particles.ForEach(func (particle *Particle, cpus int) {
+		particles.Remove(particle)
+	}, 1)
 }
 
 // Initialize all particles and other simulation objects.
@@ -118,6 +132,10 @@ func initSimulation() {
 	}
 
 	fmt.Printf("Created %d particles.\n", counter)
+
+	// Tell the simulation that it's been restarted; mostly useful when
+	// there's a user-prompted restart in the middle of a run.
+	simulator.SimulationRestarted()
 }
 
 // Create the mesh with which particles register collisions.
