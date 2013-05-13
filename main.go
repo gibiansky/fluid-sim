@@ -9,9 +9,9 @@ import (
 	"simulator"
 	"strconv"
 	"vector"
+    "flag"
+    "runtime/pprof"
 )
-
-import "runtime/pprof"
 
 var _ = fmt.Printf
 var _ = os.Exit
@@ -39,6 +39,9 @@ const (
 )
 
 var (
+    profile = flag.Bool("profile", false, "Enable profiling")
+    multithreaded = flag.Bool("multithreaded", true, "Enable multithreaded operation")
+
 	frame         = 0
 	collisionMesh = createCollisionMesh()
 	cpus          = runtime.NumCPU()
@@ -48,16 +51,24 @@ var (
 var particles ParticleList
 
 func main() {
-	// Enable profiling
-	f, err := os.Create("profile.data")
-	if err != nil {
-		log.Fatal(err)
-	}
-	pprof.StartCPUProfile(f)
-	defer pprof.StopCPUProfile()
+    // Enable profiling if the flag is set
+    flag.Parse()
+    if *profile {
+        fmt.Printf("Profiling enabled.\n")
+        f, err := os.Create("profile.data")
+        if err != nil {
+            log.Fatal(err)
+        }
+        pprof.StartCPUProfile(f)
+        defer pprof.StopCPUProfile()
+    }
+
 	particles = NewSliceParticleList()
 
 	// Use multiple cores.
+    if !*multithreaded {
+        cpus = 1
+    }
 	fmt.Printf("Using %d CPUs.\n", cpus)
 	runtime.GOMAXPROCS(cpus)
 

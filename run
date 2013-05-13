@@ -18,4 +18,5 @@ if [ ! $? -eq 0 ]; then
 fi
 
 echo 'Compiled.'
-./sph
+echo "./sph $*"
+./sph $*
