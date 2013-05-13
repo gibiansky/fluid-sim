@@ -32,6 +32,9 @@ var (
 	// Main loop will exit if running becomes false.
 	running = true
 
+	// Pause simulation but not visualization
+	paused = false
+
 	// Use help overlay
 	helpOverlay = false
 
@@ -142,6 +145,11 @@ func Terminate() {
 // Returns true if the simulation is still running and being shown.
 func Running() bool {
 	return running && glfw.WindowParam(glfw.Opened) == 1
+}
+
+// Returns true if the simulation is paused
+func Paused() bool {
+	return paused
 }
 
 // Blocks until it is time for the next frame.
@@ -301,6 +309,15 @@ func initInput() {
 		theta = initTheta
 		distance = initDistance
 	})
+
+	// Pause/unpause simulation
+	pause := func() {
+		paused = !paused
+	}
+	RegisterKey('p', KeyDown, pause)
+	RegisterKey('P', KeyDown, pause)
+	AddHotkeyHelpText("P", "Toggle simulation pause")
+
 
 	// Start listening for key presses
 	glfw.SetKeyCallback(onKey)

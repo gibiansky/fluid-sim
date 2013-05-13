@@ -79,11 +79,13 @@ func main() {
 		simulator.WaitForNextFrame()
 		simulator.Update()
 
-		// Update our own portion of the simulation
-		updateSimulation()
+		if !simulator.Paused() {
+			// Update our own portion of the simulation
+			updateSimulation()
 
-		surfaceMesh := constructSurface(particles, cpus)
-		simulator.AddMesh(surfaceMesh)
+			surfaceMesh := constructSurface(particles, cpus)
+			simulator.AddMesh(surfaceMesh)
+		}
 
 		simulator.Draw()
 	}
