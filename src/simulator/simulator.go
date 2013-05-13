@@ -311,11 +311,9 @@ func initInput() {
 	})
 
 	// Pause/unpause simulation
-	pause := func() {
+	RegisterKey('P', KeyDown, func() {
 		paused = !paused
-	}
-	RegisterKey('p', KeyDown, pause)
-	RegisterKey('P', KeyDown, pause)
+	})
 	AddHotkeyHelpText("P", "Toggle simulation pause")
 
 
