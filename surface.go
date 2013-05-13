@@ -13,8 +13,8 @@ var _ = fmt.Printf
 var _ = os.Exit
 
 const (
-	cubeWidth          = 0.7 * cm
-	isoThreshold       = 550.0
+	cubeWidth    = 0.7 * cm
+	isoThreshold = 550.0
 )
 
 var (
@@ -39,8 +39,8 @@ func constructSurface(particles ParticleList, cpus int) *simulator.Mesh {
 	// Compute field values at each vertex
 	particles.ForEach(computeFieldValues, cpus)
 
-    // Create the actual mesh
-    vertices, faces := makeSurfaceMesh()
+	// Create the actual mesh
+	vertices, faces := makeSurfaceMesh()
 
 	// Make the mesh object and return it
 	return simulator.CreateMesh("Surface", vertices, faces)
@@ -49,17 +49,17 @@ func constructSurface(particles ParticleList, cpus int) *simulator.Mesh {
 // Create the mesh using marching cubes. The values at each point must already
 // be initialized properly.
 func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
-    // Allocate initial arrays for vertices and faces
+	// Allocate initial arrays for vertices and faces
 	vertices := make([]vector.Vector, 0, 10)
 	faces := make([][]int64, 0, 10)
 
-    // Convenience function to add a face made of three vertices
+	// Convenience function to add a face made of three vertices
 	addFace := func(v1, v2, v3 vector.Vector) {
-        // Create the face
+		// Create the face
 		numVerts := int64(len(vertices))
 		face := []int64{numVerts, numVerts + 1, numVerts + 2}
 
-        // If there's not enough room for one more face, allocate more space
+		// If there's not enough room for one more face, allocate more space
 		l := len(faces)
 		if l+1 > cap(faces) {
 			// Allocate double what's needed, for future growth.
@@ -68,11 +68,11 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 			faces = newSlice
 		}
 
-        // Store new face
+		// Store new face
 		faces = faces[0 : l+1]
 		faces[l] = face
 
-        // If there's not enough room for three more vertices, allocate more space
+		// If there's not enough room for three more vertices, allocate more space
 		l = len(vertices)
 		if l+3 > cap(vertices) {
 			// Allocate double what's needed, for future growth.
@@ -81,7 +81,7 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 			vertices = newSlice
 		}
 
-        // Store new vertices
+		// Store new vertices
 		vertices = vertices[0 : l+3]
 		vertices[l] = v1
 		vertices[l+1] = v2
@@ -95,9 +95,9 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 	for x := 0; x < xpts-1; x++ {
 		for y := 0; y < ypts-1; y++ {
 			for z := 0; z < zpts-1; z++ {
-                // Stick grid values into an array indexed by the vertex number
+				// Stick grid values into an array indexed by the vertex number
 				gridVal := [8]float64{
-                    pointArray[x][y][z],
+					pointArray[x][y][z],
 					pointArray[x][y+1][z],
 					pointArray[x+1][y+1][z],
 					pointArray[x+1][y][z],
@@ -105,9 +105,9 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 					pointArray[x][y+1][z+1],
 					pointArray[x+1][y+1][z+1],
 					pointArray[x+1][y][z+1],
-                }
+				}
 
-                // Stick the locations of the grid points into an array (indexed similarly)
+				// Stick the locations of the grid points into an array (indexed similarly)
 				makeCorner := func(ix, iy, iz int) vector.Vector {
 					return minVector.Add(vector.Vector{float64(ix), float64(iy), float64(iz)}.Scale(cubeWidth))
 				}
@@ -122,15 +122,15 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 					makeCorner(x+1, y, z+1),
 				}
 
-                // Compute cube index (0 through 255)
+				// Compute cube index (0 through 255)
 				cubeindex := cubeIndex(gridVal)
 
-                // If the cube is not entirely within the surface (or entirely out of the surface)
+				// If the cube is not entirely within the surface (or entirely out of the surface)
 				if edgeTable[cubeindex] != 0 {
-                    // Compute all vertices that might be in these triangles (interpolation)
+					// Compute all vertices that might be in these triangles (interpolation)
 					vertlist := getVertices(cubeindex, gridP, gridVal)
 
-                    // Add the triangles
+					// Add the triangles
 					for i := 0; triTable[cubeindex][i] != -1; i += 3 {
 						v1 := vertlist[triTable[cubeindex][i]]
 						v2 := vertlist[triTable[cubeindex][i+1]]
@@ -141,38 +141,39 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 			}
 		}
 	}
-    return vertices, faces
+
+	return vertices, faces
 }
 
 // Compute the cube index
 func cubeIndex(gridVal [8]float64) uint8 {
-    cubeindex := 0
-    if gridVal[0] < isoThreshold {
-        cubeindex |= 1
-    }
-    if gridVal[1] < isoThreshold {
-        cubeindex |= 2
-    }
-    if gridVal[2] < isoThreshold {
-        cubeindex |= 4
-    }
-    if gridVal[3] < isoThreshold {
-        cubeindex |= 8
-    }
-    if gridVal[4] < isoThreshold {
-        cubeindex |= 16
-    }
-    if gridVal[5] < isoThreshold {
-        cubeindex |= 32
-    }
-    if gridVal[6] < isoThreshold {
-        cubeindex |= 64
-    }
-    if gridVal[7] < isoThreshold {
-        cubeindex |= 128
-    }
+	cubeindex := 0
+	if gridVal[0] < isoThreshold {
+		cubeindex |= 1
+	}
+	if gridVal[1] < isoThreshold {
+		cubeindex |= 2
+	}
+	if gridVal[2] < isoThreshold {
+		cubeindex |= 4
+	}
+	if gridVal[3] < isoThreshold {
+		cubeindex |= 8
+	}
+	if gridVal[4] < isoThreshold {
+		cubeindex |= 16
+	}
+	if gridVal[5] < isoThreshold {
+		cubeindex |= 32
+	}
+	if gridVal[6] < isoThreshold {
+		cubeindex |= 64
+	}
+	if gridVal[7] < isoThreshold {
+		cubeindex |= 128
+	}
 
-    return uint8(cubeindex)
+	return uint8(cubeindex)
 }
 
 // Get a list of vertices that are used in the triangles for this cube The
@@ -302,33 +303,33 @@ func makeBoundingBoxMesh(minVector, maxVector vector.Vector) *simulator.Mesh {
 	vertices := make([]vector.Vector, 8)
 	faces := make([][]int64, 6)
 
-	vertices[0] = vector.Vector{ minVector.X, minVector.Y, minVector.Z }
-	vertices[1] = vector.Vector{ minVector.X, minVector.Y, maxVector.Z }
-	vertices[2] = vector.Vector{ minVector.X, maxVector.Y, minVector.Z }
-	vertices[3] = vector.Vector{ minVector.X, maxVector.Y, maxVector.Z }
-	vertices[4] = vector.Vector{ maxVector.X, minVector.Y, minVector.Z }
-	vertices[5] = vector.Vector{ maxVector.X, minVector.Y, maxVector.Z }
-	vertices[6] = vector.Vector{ maxVector.X, maxVector.Y, minVector.Z }
-	vertices[7] = vector.Vector{ maxVector.X, maxVector.Y, maxVector.Z }
+	vertices[0] = vector.Vector{minVector.X, minVector.Y, minVector.Z}
+	vertices[1] = vector.Vector{minVector.X, minVector.Y, maxVector.Z}
+	vertices[2] = vector.Vector{minVector.X, maxVector.Y, minVector.Z}
+	vertices[3] = vector.Vector{minVector.X, maxVector.Y, maxVector.Z}
+	vertices[4] = vector.Vector{maxVector.X, minVector.Y, minVector.Z}
+	vertices[5] = vector.Vector{maxVector.X, minVector.Y, maxVector.Z}
+	vertices[6] = vector.Vector{maxVector.X, maxVector.Y, minVector.Z}
+	vertices[7] = vector.Vector{maxVector.X, maxVector.Y, maxVector.Z}
 
-	faces[0] = []int64{ 0, 1, 3, 2 }
-	faces[1] = []int64{ 0, 1, 5, 4 }
-	faces[2] = []int64{ 0, 2, 6, 4 }
-	faces[3] = []int64{ 2, 3, 7, 6 }
-	faces[4] = []int64{ 1, 3, 7, 5 }
-	faces[5] = []int64{ 4, 5, 7, 6 }
+	faces[0] = []int64{0, 1, 3, 2}
+	faces[1] = []int64{0, 1, 5, 4}
+	faces[2] = []int64{0, 2, 6, 4}
+	faces[3] = []int64{2, 3, 7, 6}
+	faces[4] = []int64{1, 3, 7, 5}
+	faces[5] = []int64{4, 5, 7, 6}
 
 	return simulator.CreateMesh("BoundingBox", vertices, faces)
 }
 
 // Construct the array to hold the field values
 func makePointArray(minVector, maxVector vector.Vector) [][][]float64 {
-    // Compute size of array with leniency
+	// Compute size of array with leniency
 	diffVector := maxVector.Subtract(minVector)
-    cubeVector := diffVector.Scale(1/cubeWidth).Add(vector.Vector{ 1, 1, 1 })
+	cubeVector := diffVector.Scale(1 / cubeWidth).Add(vector.Vector{1, 1, 1})
 	xpts, ypts, zpts := int(cubeVector.X), int(cubeVector.Y), int(cubeVector.Z)
 
-    // Create array and all sub-arrays
+	// Create array and all sub-arrays
 	points := make([][][]float64, xpts)
 	for i := 0; i < xpts; i++ {
 		points[i] = make([][]float64, ypts)
@@ -342,28 +343,28 @@ func makePointArray(minVector, maxVector vector.Vector) [][][]float64 {
 
 // Compute field value contributions from a particle to any points it has influence over
 func computeFieldValues(particle *Particle, cpu int) {
-    // Shift to have position within bounding box
+	// Shift to have position within bounding box
 	boundingPosition := particle.position.Subtract(minVector)
 
-    // Get corners of box in which this particle can exert any influence at all (in cube coords)
+	// Get corners of box in which this particle can exert any influence at all (in cube coords)
 	lower := boundingPosition.Subtract(kernelRadiusVec).Scale(1 / cubeWidth)
 	upper := boundingPosition.Add(kernelRadiusVec).Scale(1 / cubeWidth)
 
-    // Compute cube index positions of those corners
-    xStart, yStart, zStart := math.Ceil(lower.X), math.Ceil(lower.Y), math.Ceil(lower.Z)
-    xEnd, yEnd, zEnd := math.Floor(upper.X), math.Floor(upper.Y), math.Floor(upper.Z)
+	// Compute cube index positions of those corners
+	xStart, yStart, zStart := math.Ceil(lower.X), math.Ceil(lower.Y), math.Ceil(lower.Z)
+	xEnd, yEnd, zEnd := math.Floor(upper.X), math.Floor(upper.Y), math.Floor(upper.Z)
 
-    // Loop over all cubes this particle might influence
+	// Loop over all cubes this particle might influence
 	for i := xStart; i <= xEnd; i++ {
 		for j := yStart; j <= yEnd; j++ {
 			for k := zStart; k <= zEnd; k++ {
-                // Compute distance to that cube corner
-				dist := boundingPosition.DistanceTo(vector.Vector{ i, j, k }.Scale(cubeWidth))
+				// Compute distance to that cube corner
+				dist := boundingPosition.DistanceTo(vector.Vector{i, j, k}.Scale(cubeWidth))
 
-                // If the distance is within the kernel, increment by the amount of influence
+				// If the distance is within the kernel, increment by the amount of influence
 				if dist < kernelRadius {
-                    // Do not allow multiple threads to write to the same location.
-                    // Otherwise, we could get two threads ignoring each others' values.
+					// Do not allow multiple threads to write to the same location.
+					// Otherwise, we could get two threads ignoring each others' values.
 					mutex.Lock()
 					pointArray[int(i)][int(j)][int(k)] += smoothingKernel(dist)
 					mutex.Unlock()

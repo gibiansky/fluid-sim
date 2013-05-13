@@ -55,7 +55,7 @@ func main() {
 	}
 	pprof.StartCPUProfile(f)
 	defer pprof.StopCPUProfile()
-	particles     = NewSliceParticleList()
+	particles = NewSliceParticleList()
 
 	// Use multiple cores.
 	fmt.Printf("Using %d CPUs.\n", cpus)
@@ -100,7 +100,7 @@ func main() {
 func clearSimulation() {
 	// Only run this with one processor, or you'll get *all* the index out
 	// of bounds errors.
-	particles.ForEach(func (particle *Particle, cpus int) {
+	particles.ForEach(func(particle *Particle, cpus int) {
 		particles.Remove(particle)
 	}, 1)
 }
@@ -262,8 +262,8 @@ func computeCollisions(particle *Particle, cpu int) {
 func CheckForCollision(particle *Particle) (bool, vector.Vector) {
 	fullNormal := vector.Zero
 	collision := false
-    location := particle.position
-    nextLocation := particle.position.Add(particle.velocity.Scale(dt))
+	location := particle.position
+	nextLocation := particle.position.Add(particle.velocity.Scale(dt))
 
 	// Check each face for collision separately.
 	for faceInd, face := range collisionMesh.Faces {
@@ -282,7 +282,7 @@ func CheckForCollision(particle *Particle) (bool, vector.Vector) {
 			v1 := p1.Subtract(p0)
 			v2 := p2.Subtract(p0)
 			if CheckTriangleCollision(location.Subtract(p0), nextLocation.Subtract(p0), v1, v2, normal) {
-                collision = true
+				collision = true
 				fullNormal = fullNormal.Add(normal)
 			}
 		} else if len(face) == 4 {
@@ -322,30 +322,30 @@ func CheckForCollision(particle *Particle) (bool, vector.Vector) {
 // Check if the triangle defined by two vectors v1 and v2 and a normal vector
 // norm has a collision (within a particle radius) of the given location.
 func CheckTriangleCollision(location, nextLocation, v1, v2, norm vector.Vector) bool {
-    // Compute the ray from the current location to the next location
-    rayStart := location
-    rayDirection := nextLocation.Subtract(location)
-    intersectionDist := -norm.Dot(rayStart) / norm.Dot(rayDirection)
+	// Compute the ray from the current location to the next location
+	rayStart := location
+	rayDirection := nextLocation.Subtract(location)
+	intersectionDist := -norm.Dot(rayStart) / norm.Dot(rayDirection)
 
-    // Check that the location is close enough to the face to intersect in the next timestep
-    if intersectionDist < 0 || intersectionDist > 1 {
-        return false
-    }
+	// Check that the location is close enough to the face to intersect in the next timestep
+	if intersectionDist < 0 || intersectionDist > 1 {
+		return false
+	}
 
-    // Find the intersection
-    intersection := rayStart.Add(rayDirection.Scale(intersectionDist))
+	// Find the intersection
+	intersection := rayStart.Add(rayDirection.Scale(intersectionDist))
 
-    // Check if it is inside the triangle
-    if norm.Dot(v1.CrossProduct(intersection)) < 0 {
-        return false
-    }
-    if norm.Dot(v2.Subtract(v1).CrossProduct(intersection.Subtract(v1))) < 0 {
-        return false
-    }
-    if norm.Dot(v2.Scale(-1).CrossProduct(intersection.Subtract(v2))) < 0 {
-        return false
-    }
+	// Check if it is inside the triangle
+	if norm.Dot(v1.CrossProduct(intersection)) < 0 {
+		return false
+	}
+	if norm.Dot(v2.Subtract(v1).CrossProduct(intersection.Subtract(v1))) < 0 {
+		return false
+	}
+	if norm.Dot(v2.Scale(-1).CrossProduct(intersection.Subtract(v2))) < 0 {
+		return false
+	}
 
-    // Collision!
-    return true
+	// Collision!
+	return true
 }
