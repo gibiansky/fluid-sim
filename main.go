@@ -48,13 +48,13 @@ var (
 var particles ParticleList
 
 func main() {
-//	// Enable profiling
-//	f, err := os.Create("profile.data")
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	pprof.StartCPUProfile(f)
-//	defer pprof.StopCPUProfile()
+	// Enable profiling
+	f, err := os.Create("profile.data")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
 	particles     = NewSliceParticleList()
 
 	// Use multiple cores.
