@@ -221,7 +221,7 @@ func computeUpdate(particle *Particle, cpu int) {
 
 	// Only count color when it exists Otherwise, this causes the normalization
 	// to fail and then particles become NaN.
-	if colorGradient.Length() > 0 {
+	if colorGradient.X > 0 || colorGradient.Y > 0 || colorGradient.Z > 0 {
 		force.Translate(colorGradient.Normalized().Scale(colorLaplace * surfaceTensionConstant))
 	}
 

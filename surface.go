@@ -14,7 +14,7 @@ var _ = os.Exit
 
 const (
 	cubeWidth    = 0.8 * cm
-	isoThreshold = 500.0
+	isoThreshold = 100.0
 )
 
 var (
@@ -66,7 +66,7 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 		waitGroup.Add(cpus)
 
 		// Start a new goroutine for each processor
-		verticesPerProcessor := 250
+		verticesPerProcessor := 100
 		for proc := 0; proc < cpus; proc++ {
 			end := len(vertices) - verticesPerProcessor * proc
 			start := end - verticesPerProcessor

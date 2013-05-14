@@ -63,13 +63,14 @@ func NewSliceParticleList() *SliceParticleList {
 
 func (this *SliceParticleList) FindNeighbors(particle *Particle, radius float64, proc int) ([]*Particle, []float64) {
 	counter := 0
+    pos := particle.position
 	for _, p := range this.particles {
 		// Optimize a bit by checking point-wise distance before computing true distance
-		delta := particle.position.Subtract(p.position)
+		delta := vector.Vector{pos.X - p.position.X, pos.Y - p.position.Y, pos.Z - p.position.Z}
 		if math.Abs(delta.X) < radius && math.Abs(delta.Y) < radius && math.Abs(delta.Z) < radius {
 
 			// Since we know there's a possibility of this being within the radius, compute the precise distance
-			this.distanceSlices[proc][counter] = particle.position.DistanceTo(p.position)
+			this.distanceSlices[proc][counter] = pos.DistanceTo(p.position)
 			if this.distanceSlices[proc][counter] <= radius {
 				this.neighborSlices[proc][counter] = p
 				counter++

@@ -12,12 +12,13 @@ var Zero = Vector{0, 0, 0}
 
 // Compute distance to another vector.
 func (this *Vector) DistanceTo(other Vector) float64 {
-	return math.Hypot(this.X-other.X, math.Hypot(this.Y-other.Y, this.Z-other.Z))
+    dx, dy, dz := this.X - other.X, this.Y - other.Y, this.Z - other.Z
+    return math.Sqrt(dx * dx + dy * dy + dz * dz)
 }
 
 // Compute vector length.
 func (this *Vector) Length() float64 {
-	return this.DistanceTo(Vector{0, 0, 0})
+    return math.Sqrt(this.X * this.X + this.Y * this.Y + this.Z * this.Z)
 }
 
 // Return a normalized version of this vector.
