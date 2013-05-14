@@ -7,6 +7,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 // Mesh object loaded from a *.obj file.
@@ -274,49 +275,89 @@ func ComputeNormals(mesh *Mesh) ([]vector.Vector, []vector.Vector) {
 
 	// Compute normals for faces. Normals for faces are formed by the cross
 	// product of their edges.
-	for faceInd, face := range mesh.Faces {
-		// Compute edge 1 and edge 2 as vectors between pairs of vertices
-		var first vector.Vector
-		first.X = mesh.Vertices[face[0]].X - mesh.Vertices[face[1]].X
-		first.Y = mesh.Vertices[face[0]].Y - mesh.Vertices[face[1]].Y
-		first.Z = mesh.Vertices[face[0]].Z - mesh.Vertices[face[1]].Z
+    // Create a wait group to wait for this to finish
+    var waitGroup sync.WaitGroup
+    waitGroup.Add(cpus)
 
-		var second vector.Vector
-		second.X = mesh.Vertices[face[0]].X - mesh.Vertices[face[2]].X
-		second.Y = mesh.Vertices[face[0]].Y - mesh.Vertices[face[2]].Y
-		second.Z = mesh.Vertices[face[0]].Z - mesh.Vertices[face[2]].Z
+	// Start a new goroutine for each processor
+	facesPerProcessor := len(mesh.Faces) / cpus
+	for proc := 0; proc < cpus; proc++ {
+		start := proc * facesPerProcessor
+		end := (proc + 1) * facesPerProcessor
+		if proc == cpus-1 {
+			end = len(mesh.Faces)
+		}
 
-		// Compute Normal = CrossProduct(edge 1, edge 2)
-		faceNormals[faceInd] = first.CrossProduct(second).Normalized()
+		go func(proc int) {
+			for i, face := range mesh.Faces[start:end] {
+				faceInd := i + start
+				// Compute edge 1 and edge 2 as vectors between pairs of vertices
+				var first vector.Vector
+				first.X = mesh.Vertices[face[0]].X - mesh.Vertices[face[1]].X
+				first.Y = mesh.Vertices[face[0]].Y - mesh.Vertices[face[1]].Y
+				first.Z = mesh.Vertices[face[0]].Z - mesh.Vertices[face[1]].Z
+
+				var second vector.Vector
+				second.X = mesh.Vertices[face[0]].X - mesh.Vertices[face[2]].X
+				second.Y = mesh.Vertices[face[0]].Y - mesh.Vertices[face[2]].Y
+				second.Z = mesh.Vertices[face[0]].Z - mesh.Vertices[face[2]].Z
+
+				// Compute Normal = CrossProduct(edge 1, edge 2)
+				faceNormals[faceInd] = first.CrossProduct(second).Normalized()
+			}
+
+            waitGroup.Done()
+		}(proc)
 	}
+
+    waitGroup.Wait()
+
 
 	// Compute normals for vertices. Normals for vertices are the sum of the
 	// faces to which this vertex belonged. (Note that after taking the sum,
 	// the normals must be renormalized to be unit length.)
-	for vertInd, _ := range mesh.Vertices {
+    waitGroup.Add(cpus)
 
-		// Initialize vertex normals to zero
-		vertexNormals[vertInd].X, vertexNormals[vertInd].Y, vertexNormals[vertInd].Z = 0, 0, 0
-
-		// Look at all faces to find the ones where this vertex is present.
-		for faceInd, face := range mesh.Faces {
-			for _, vert := range face {
-				// If this vertex is present in this face, add the face normal
-				// to the vertex normal. This only happens once per face max.
-				if int(vert) == vertInd {
-					vertexNormals[vertInd].X += faceNormals[faceInd].X
-					vertexNormals[vertInd].Y += faceNormals[faceInd].Y
-					vertexNormals[vertInd].Z += faceNormals[faceInd].Z
-				}
-			}
+	// Start a new goroutine for each processor
+	verticesPerProcessor := len(mesh.Vertices) / cpus
+	for proc := 0; proc < cpus; proc++ {
+		start := proc * verticesPerProcessor
+		end := (proc + 1) * verticesPerProcessor
+		if proc == cpus-1 {
+			end = len(mesh.Vertices)
 		}
 
-		// Renormalize the normal to be unit length.
-		normalSize := math.Hypot(vertexNormals[vertInd].X, math.Hypot(vertexNormals[vertInd].Y, vertexNormals[vertInd].Z))
-		vertexNormals[vertInd].X /= normalSize
-		vertexNormals[vertInd].Y /= normalSize
-		vertexNormals[vertInd].Z /= normalSize
+		go func(proc int) {
+			for i, _ := range mesh.Vertices[start:end] {
+				vertInd := i + start
+				// Initialize vertex normals to zero
+				vertexNormals[vertInd].X, vertexNormals[vertInd].Y, vertexNormals[vertInd].Z = 0, 0, 0
+
+				// Look at all faces to find the ones where this vertex is present.
+				for faceInd, face := range mesh.Faces {
+					for _, vert := range face {
+						// If this vertex is present in this face, add the face normal
+						// to the vertex normal. This only happens once per face max.
+						if int(vert) == vertInd {
+							vertexNormals[vertInd].X += faceNormals[faceInd].X
+							vertexNormals[vertInd].Y += faceNormals[faceInd].Y
+							vertexNormals[vertInd].Z += faceNormals[faceInd].Z
+						}
+					}
+				}
+
+				// Renormalize the normal to be unit length.
+				normalSize := math.Hypot(vertexNormals[vertInd].X, math.Hypot(vertexNormals[vertInd].Y, vertexNormals[vertInd].Z))
+				vertexNormals[vertInd].X /= normalSize
+				vertexNormals[vertInd].Y /= normalSize
+				vertexNormals[vertInd].Z /= normalSize
+			}
+
+            waitGroup.Done()
+		}(proc)
 	}
+
+    waitGroup.Wait()
 
 	return faceNormals, vertexNormals
 }

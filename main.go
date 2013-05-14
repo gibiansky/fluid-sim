@@ -72,6 +72,7 @@ func main() {
 	}
 	fmt.Printf("Using %d CPUs.\n", cpus)
 	runtime.GOMAXPROCS(cpus)
+	simulator.SetCPUs(cpus)
 
 	// Initialize simulator
 	if err := simulator.Init("Smoothed Particle Hydrodynamics", Width, Height, FPS); err != nil {

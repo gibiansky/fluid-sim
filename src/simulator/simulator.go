@@ -94,6 +94,9 @@ var (
 		"X":        8,
 		"Space":    9,
 	}
+
+	// Number of CPUs so we don't have to pass it around
+	cpus = 1
 )
 
 var width, height, framesPerSecond int
@@ -654,4 +657,8 @@ func loadTexture(texture gl.Texture, filename string) {
 	// nearby texture points; gl.NEAREST just uses the nearest texture point.
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+}
+
+func SetCPUs(newCpus int) {
+	cpus = newCpus
 }
