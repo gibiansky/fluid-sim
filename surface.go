@@ -13,7 +13,7 @@ var _ = fmt.Printf
 var _ = os.Exit
 
 const (
-	cubeWidth    = 0.4 * cm
+	cubeWidth    = 0.8 * cm
 	isoThreshold = 500.0
 )
 
@@ -43,17 +43,8 @@ func constructSurface(particles ParticleList, cpus int) *simulator.Mesh {
 	// Create the actual mesh
 	vertices, faces := makeSurfaceMesh()
 
-    // Optimize the mesh
-    vertices, faces = optimizeMesh(vertices, faces)
-
 	// Make the mesh object and return it
 	return simulator.CreateMesh("Surface", vertices, faces)
-}
-
-// Optimize a mesh by removing vertices and joining faces
-func optimizeMesh(vertices []vector.Vector, faces [][]int64) ([]vector.Vector, [][]int64) {
-    fmt.Printf("Vertices: %v\nFaces: %v\n\n", len(vertices), len(faces))
-    return vertices, faces
 }
 
 // Create the mesh using marching cubes. The values at each point must already
@@ -65,23 +56,63 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 
 	// Convenience function to add a face made of three vertices
 	addFace := func(v1, v2, v3 vector.Vector) {
+        distThresh := 0.001 * cm
         newVerts := 3
 		numVerts := int64(len(vertices))
         n1, n2, n3 := int64(-1), int64(-1), int64(-1)
 
-        distThresh := 0.01 * cm
-        for i := len(vertices) - 1; i >= 0 && i >= int(0.8 * float32(len(vertices))); i-- {
-            if v1.DistanceTo(vertices[i]) < distThresh && n1 < 0 {
-                n1 = int64(i)
-                newVerts --
-            } else if v2.DistanceTo(vertices[i]) < distThresh && n2 < 0 {
-                n2 = int64(i)
-                newVerts --
-            } else if v3.DistanceTo(vertices[i]) < distThresh && n3 < 0 {
-                n3 = int64(i)
-                newVerts --
-            }
-        }
+		// Create a wait group to wait for this to finish
+		var waitGroup sync.WaitGroup
+		waitGroup.Add(cpus)
+
+		// Start a new goroutine for each processor
+		verticesPerProcessor := 250
+		for proc := 0; proc < cpus; proc++ {
+			end := len(vertices) - verticesPerProcessor * proc
+			start := end - verticesPerProcessor
+			if start < 0 {
+				start = 0
+			}
+
+			if end < 0 {
+				waitGroup.Done()
+				continue
+			}
+
+			go func(proc int) {
+				for counter, vertex := range vertices[start:end] {
+					i := counter + start
+					if n1 < 0 && v1.DistanceTo(vertex) < distThresh {
+						mutex.Lock()
+						if n1 < 0 {
+							n1 = int64(i)
+							newVerts --
+						}
+						mutex.Unlock()
+					}
+					if n2 < 0 && v2.DistanceTo(vertex) < distThresh {
+						mutex.Lock()
+						if n2 < 0 {
+							n2 = int64(i)
+							newVerts --
+						}
+						mutex.Unlock()
+					}
+					if n3 < 0 && v3.DistanceTo(vertex) < distThresh {
+						mutex.Lock()
+						if n3 < 0 {
+							n3 = int64(i)
+							newVerts --
+						}
+						mutex.Unlock()
+					}
+				}
+
+				waitGroup.Done()
+			}(proc)
+		}
+
+		waitGroup.Wait()
 
         used := int64(0)
         if n1 < 0 {
@@ -114,7 +145,7 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 
 		// If there's not enough room for three more vertices, allocate more space
 		l = len(vertices)
-		if l+newVerts > cap(vertices) {
+		if l + newVerts > cap(vertices) {
 			// Allocate double what's needed, for future growth.
 			newSlice := make([]vector.Vector, (l+newVerts)*2)
 			copy(newSlice, vertices)

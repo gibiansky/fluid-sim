@@ -42,6 +42,7 @@ var (
 	profile       = flag.Bool("profile", false, "Enable profiling")
 	drawSurface       = flag.Bool("surface", true, "Enable drawing the isosurface")
 	multithreaded = flag.Bool("multithreaded", true, "Enable multithreaded operation")
+	drawParticles = flag.Bool("particles", false, "Enable particle drawing")
 
 	frame         = 0
 	collisionMesh = createCollisionMesh()
@@ -139,7 +140,9 @@ func initSimulation() {
 				newParticle.mesh.Translate(float32(x*cm), float32(y*cm), float32(z*cm))
 				newParticle.mesh.Name += strconv.Itoa(counter)
 				newParticle.density = rho
-				simulator.AddMesh(newParticle.mesh)
+				if *drawParticles {
+					simulator.AddMesh(newParticle.mesh)
+				}
 				particles.Add(newParticle)
 				counter++
 			}
