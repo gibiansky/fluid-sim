@@ -361,6 +361,7 @@ func initGL() {
 	mat_shininess := []float32{50.0}
 	light0_position := []float32{1.0, 1.0, 1.0, 0.0}
 	light1_position := []float32{-1.0, -1.0, 1.0, 0.0}
+	light2_position := []float32{1.0, 1.0, -1.0, 0.0}
 
 	light1_diffuse := []float32{1.0, 1.0, 1.0, 1.0}
 	light1_specular := []float32{0.1, 0.1, 0.1, 1.0}
@@ -375,9 +376,14 @@ func initGL() {
 	gl.Lightfv(gl.LIGHT1, gl.DIFFUSE, light1_diffuse)
 	gl.Lightfv(gl.LIGHT1, gl.SPECULAR, light1_specular)
 
+	gl.Lightfv(gl.LIGHT2, gl.POSITION, light2_position)
+	gl.Lightfv(gl.LIGHT2, gl.DIFFUSE, light1_diffuse)
+	gl.Lightfv(gl.LIGHT2, gl.SPECULAR, light1_specular)
+
 	gl.Enable(gl.LIGHTING)
 	gl.Enable(gl.LIGHT0)
 	gl.Enable(gl.LIGHT1)
+	gl.Enable(gl.LIGHT2)
 
 	gl.Enable(gl.TEXTURE_2D)
 }

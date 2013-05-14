@@ -13,8 +13,8 @@ var _ = fmt.Printf
 var _ = os.Exit
 
 const (
-	cubeWidth    = 0.8 * cm
-	isoThreshold = 100.0
+	cubeWidth    = 0.4 * cm
+	isoThreshold = 600.0
 )
 
 var (
