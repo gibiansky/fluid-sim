@@ -13,8 +13,8 @@ var _ = fmt.Printf
 var _ = os.Exit
 
 const (
-	cubeWidth    = 0.4 * cm
-	isoThreshold = 600.0
+	cubeWidth    = 0.35 * cm
+	isoThreshold = 1700.0
 )
 
 var (
@@ -51,8 +51,8 @@ func constructSurface(particles ParticleList, cpus int) *simulator.Mesh {
 // be initialized properly.
 func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 	// Allocate initial arrays for vertices and faces
-	vertices := make([]vector.Vector, 0, 10)
-	faces := make([][]int64, 0, 10)
+	vertices := make([]vector.Vector, 0, 1000)
+	faces := make([][]int64, 0, 1000)
 
 	// Convenience function to add a face made of three vertices
 	addFace := func(v1, v2, v3 vector.Vector) {
@@ -66,7 +66,7 @@ func makeSurfaceMesh() ([]vector.Vector, [][]int64) {
 		waitGroup.Add(cpus)
 
 		// Start a new goroutine for each processor
-		verticesPerProcessor := 100
+		verticesPerProcessor := 1000
 		for proc := 0; proc < cpus; proc++ {
 			end := len(vertices) - verticesPerProcessor * proc
 			start := end - verticesPerProcessor

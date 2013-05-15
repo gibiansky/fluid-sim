@@ -21,7 +21,7 @@ const (
 	Width                  = 920
 	Height                 = 720
 	FPS                    = 30
-	dt                     = 1 / 1500.0 // s
+	dt                     = 1 / 2000.0 // s
 	gravity                = 9.81 * m  // m/s^2
 	m                      = 10.0
 	cm                     = m / 100.0
@@ -35,7 +35,7 @@ const (
 	kernelRadius          = 1.5 * cm
 	particleMass          = 1.0 * g
 	particleRadius        = 0.3 * cm
-	collisionDampingRatio = 0.9
+	collisionDampingRatio = 0.8
 )
 
 var (
@@ -127,7 +127,7 @@ func initSimulation() {
 	//particle := simulator.LoadObjFile("data/cube.obj")["Cube"]
 	particle := simulator.LoadObjFile("data/sphere.obj")["Sphere"]
 	particle.Scale(particleRadius)
-	spacing := 0.7
+	spacing := 0.5
 	rho = 1.0 / math.Pow(spacing, 3) * g / (cm * cm * cm) // g/cm^3
 	counter := 0
 	for x := -4.0; x <= 4; x += spacing {
